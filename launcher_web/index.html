@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BR2 Launcher</title>
+    <style>
+      :root {
+        --bg: #09111f;
+        --card: rgba(10, 20, 38, 0.82);
+        --line: rgba(255, 255, 255, 0.14);
+        --text: #eef4ff;
+        --muted: #95a7c3;
+        --accent: #38bdf8;
+        --accent-2: #f59e0b;
+        --ok: #22c55e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 35%),
+          radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.18), transparent 30%),
+          linear-gradient(160deg, #050913 0%, #0b1527 60%, #08111c 100%);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .card {
+        width: min(720px, 100%);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 28px;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 12px;
+        margin: 0 0 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 6vw, 56px);
+        line-height: 0.95;
+      }
+
+      p {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 28px 0;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 22px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary {
+        color: #03121a;
+        background: linear-gradient(135deg, var(--accent) 0%, #7dd3fc 100%);
+      }
+
+      .secondary {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--line);
+      }
+
+      .status {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .label {
+        color: var(--muted);
+      }
+
+      .value {
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .message {
+        margin-top: 16px;
+        color: var(--accent-2);
+        min-height: 24px;
+      }
+
+      .running {
+        color: var(--ok);
+      }
+
+      .tip {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      code {
+        font-family: Consolas, Monaco, monospace;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="eyebrow">Local Web Launcher</div>
+      <h1>Run BR2 File</h1>
+      <p>
+        Web nay chay local tren may ban. Bam nut de mo file
+        <code>BR2_thichlaviet.com.exe</code> tu giao dien web.
+      </p>
+
+      <div class="actions">
+        <button class="primary" id="runButton">Chay file</button>
+        <button class="secondary" id="openSiteButton">Mo website goc</button>
+        <button class="secondary" id="refreshButton">Lam moi trang thai</button>
+      </div>
+
+      <section class="status">
+        <div class="row">
+          <div class="label">File ton tai</div>
+          <div class="value" id="existsValue">Dang kiem tra...</div>
+        </div>
+        <div class="row">
+          <div class="label">Trang thai</div>
+          <div class="value" id="runningValue">Dang kiem tra...</div>
+        </div>
+        <div class="row">
+          <div class="label">Duong dan</div>
+          <div class="value"><code id="fileValue">Dang tai...</code></div>
+        </div>
+      </section>
+
+      <div class="message" id="message"></div>
+      <div class="tip">
+        Neu may khong co file <code>BR2_thichlaviet.com.exe</code> hoac Windows chan
+        quyen admin, ban van co the dung nut <code>Mo website goc</code>.
+      </div>
+    </main>
+
+    <script>
+      const existsValue = document.getElementById("existsValue");
+      const runningValue = document.getElementById("runningValue");
+      const fileValue = document.getElementById("fileValue");
+      const message = document.getElementById("message");
+      const runButton = document.getElementById("runButton");
+      const openSiteButton = document.getElementById("openSiteButton");
+      const refreshButton = document.getElementById("refreshButton");
+      let siteUrl = "https://thichlaviet.com/";
+
+      function paintStatus(data) {
+        existsValue.textContent = data.exists ? "Co" : "Khong";
+        runningValue.textContent = data.running ? "Dang chay" : "Chua chay";
+        runningValue.className = `value ${data.running ? "running" : ""}`;
+        fileValue.textContent = data.file || "";
+        siteUrl = data.siteUrl || siteUrl;
+      }
+
+      async function loadStatus() {
+        const response = await fetch("/status");
+        const data = await response.json();
+        paintStatus(data);
+        message.textContent = data.message || "";
+        return data;
+      }
+
+      async function runFile() {
+        runButton.disabled = true;
+        message.textContent = "Dang gui lenh chay file...";
+
+        try {
+          const response = await fetch("/run", { method: "POST" });
+          const data = await response.json();
+          paintStatus(data);
+          message.textContent = data.message || "Da xu ly.";
+        } catch (error) {
+          message.textContent = "Khong the ket noi toi server.";
+        } finally {
+          runButton.disabled = false;
+        }
+      }
+
+      function openSite() {
+        window.open(siteUrl, "_blank", "noopener,noreferrer");
+      }
+
+      runButton.addEventListener("click", runFile);
+      openSiteButton.addEventListener("click", openSite);
+      refreshButton.addEventListener("click", loadStatus);
+      loadStatus();
+    </script>
+  </body>
+  </html>
